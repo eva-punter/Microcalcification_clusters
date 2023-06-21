@@ -7,16 +7,12 @@ import os
 import random
 import numpy as np
 
-from matplotlib.patches import Rectangle
-
 from pydicom import dcmread
 from scipy.ndimage import distance_transform_edt, gaussian_filter, median_filter
-from skimage.measure import label
-import matplotlib.pyplot as plt
+#from skimage.measure import label
 
 # from .utils_eva import *
-from rood_blauw import *
-from utils_plotting import plot_masks, plot_grid, plot_highest_scoring_roi, plot_optimal_region, full_extent, plot_third_optimal_region, plot_frangi_intensity_combined_mask, plot_filtered_mask, plot_highest_scoring_contrast_box, plot_final_mask, plot_first_optimal_region
+from utils_rood_blauw import *
 
 def get_malignant_calc_cluster(image_path, output_dir_path, masks_saved=False, nb_calcs_random=True):
     """ Compute malignant calc cluster, with edt and raytracing transformation already applied
@@ -154,54 +150,7 @@ def get_calc_cluster(image_path, output_dir_path,
         
     # Get the highest scoring ROI, containing in total nb_calcs calcifications, based on the contrast in said ROI, the presence of calcifications and the vicinity of the ROI
     highest_contrast_array_box, uniquely_added_calcs = get_highest_scoring_contrast_box_vicinity(filtered_mask, df_all_box, df_sorted_box, nb_calcs)
-    plot_highest_scoring_contrast_box(box, filtered_mask, highest_contrast_array_box, df_sorted_box, output_info, True) # plot    
-
-    fig, ax = plt.subplots(1,2)
-
-    # Display the image with the nb highest scoring ROIs
-    ax[0].imshow(box, cmap='bone')
-            
-    for row in highest_contrast_array_box:
-        rect = Rectangle((row[0], row[1]), row[2], row[3], linewidth=1, edgecolor='r', facecolor='none')
-        ax[0].add_patch(rect)
-
-    ax[0].set_title("Contrast on image box")
-    ax[0].set_xlabel("x-pixels")
-    ax[0].set_ylabel("y-pixels")
-
-    ax[1].imshow(box*filtered_mask.astype(bool), cmap='bone')
-            
-    for row in highest_contrast_array_box:
-        rect = Rectangle((row[0], row[1]), row[2], row[3], linewidth=1, edgecolor='r', facecolor='none')
-        ax[1].add_patch(rect)
-
-    ax[1].set_title("Contrast on filtered mask")
-    ax[1].set_xlabel("x-pixels")
-    ax[1].set_ylabel("y-pixels")
-
-    fig2, ax2 = plt.subplots(1,3)
-
-    ax2[0].imshow(box*(1-np.array((combined_mask.astype(bool)))), cmap='bone')
-
-    ax2[0].set_title("Selected mask on image")
-    ax2[0].set_xlabel("x-pixels")
-    ax2[0].set_ylabel("y-pixels")
-
-    distance_transformed = distance_transform_edt(combined_mask.astype(bool))
-    ax2[1].imshow(distance_transformed, cmap='bone')
-
-    ax2[1].set_title("Dist. transformed")
-    ax2[1].set_xlabel("x-pixels")
-    ax2[1].set_ylabel("y-pixels")
-
-    ax2[2].imshow(gaussian_filter(distance_transformed, 0.5), cmap='bone')
-
-    ax2[2].set_title("Gaussian")
-    ax2[2].set_xlabel("x-pixels")
-    ax2[2].set_ylabel("y-pixels")
-
-
-    plt.tight_layout()
+    
 
     # Combine both the filtered mask from the frangi and intensity masks together with the calcs selected based on the contrast
     buffer = combine_contrast_mask(filtered_mask, uniquely_added_calcs)
